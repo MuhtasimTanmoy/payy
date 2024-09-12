@@ -9,6 +9,7 @@ use ethereum_types::{H160, H256, U256, U64};
 use parking_lot::RwLock;
 use secp256k1::{Message, SECP256K1};
 use sha3::{Digest, Keccak256};
+use testutil::eth::EthNode;
 use tracing::warn;
 use web3::contract::tokens::{Tokenizable, TokenizableItem, Tokenize};
 use web3::ethabi::Token;
@@ -187,6 +188,12 @@ impl RollupContract {
         self_.load_all_validators().await?;
 
         Ok(self_)
+    }
+
+    pub async fn from_eth_node(eth_node: &EthNode, secret_key: SecretKey) -> Result<Self> {
+        let rollup_addr = "2279b7a0a67db372996a5fab50d91eaa73d2ebe6";
+        let client = Client::from_eth_node(eth_node);
+        Self::load(client, rollup_addr, secret_key).await
     }
 
     pub fn at_height(self, height: Option<u64>) -> Self {

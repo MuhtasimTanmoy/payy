@@ -1,10 +1,7 @@
 use std::marker::PhantomData;
 
 use ::secp256k1::{ecdsa::RecoverableSignature, PublicKey};
-use eth_types::{
-    sign_types::{pk_bytes_le, pk_bytes_swap_endianness, SignData},
-    Field,
-};
+use eth_types::sign_types::{pk_bytes_le, pk_bytes_swap_endianness, SignData};
 use halo2_base::halo2_proofs::{
     circuit::Layouter,
     halo2curves::secp256k1,
@@ -13,7 +10,7 @@ use halo2_base::halo2_proofs::{
 use zkevm_circuits::{
     sig_circuit::{utils::AssignedSignatureVerify, SigCircuitConfig, SigCircuitConfigArgs},
     table::{KeccakTable, SigTable},
-    util::{Challenges, SubCircuitConfig},
+    util::{Challenges, Field, SubCircuitConfig},
 };
 
 #[derive(Debug, thiserror::Error)]
@@ -192,10 +189,7 @@ mod tests {
     use ::secp256k1::{
         ecdsa::RecoverableSignature, rand::SeedableRng, Message, PublicKey, Secp256k1, SecretKey,
     };
-    use eth_types::{
-        sign_types::{biguint_to_32bytes_le, SignData},
-        Field,
-    };
+    use eth_types::sign_types::{biguint_to_32bytes_le, SignData};
     use halo2_base::halo2_proofs::{
         circuit::SimpleFloorPlanner,
         dev::MockProver,
@@ -279,7 +273,7 @@ mod tests {
             layouter.assign_region(
                 || "check sig_is_valid = 1",
                 |mut region| {
-                    region.constrain_constant(verified_sigs[0].sig_is_valid.cell(), F::one())?;
+                    region.constrain_constant(verified_sigs[0].sig_is_valid.cell(), F::ONE)?;
 
                     Ok(())
                 },

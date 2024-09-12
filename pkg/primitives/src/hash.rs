@@ -1,11 +1,11 @@
 use crate::u256;
 use borsh::{BorshDeserialize, BorshSerialize};
-use contracts::H256;
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
 use std::borrow::Borrow;
 use std::fmt::{Debug, Display};
 use std::str::FromStr;
+use web3::types::H256;
 
 #[derive(
     Clone,

@@ -1,6 +1,6 @@
 [package]
 name = "wire-message-macro"
-version = "1.1.12"
+version = "1.3.0"
 edition = "2021"
 
 [lib]

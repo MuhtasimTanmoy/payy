@@ -43,7 +43,7 @@ impl<F: Field> IsLessThanChip<F> {
             let is_less = meta.query_advice(is_less, Rotation::cur());
             let can_set = meta.query_advice(can_set, Rotation::cur());
 
-            let one = Expression::Constant(F::one());
+            let one = Expression::Constant(F::ONE);
 
             //  max   |  alpha   |  is_less         |  can_set       |  selector
             //                   |  last_is_less    |  last_can_set  |
@@ -99,13 +99,13 @@ impl<F: Field> IsLessThanChip<F> {
                     || "init is_less",
                     is_less_advice,
                     0,
-                    F::one(),
+                    F::ONE,
                 )?;
                 let mut can_set = region.assign_advice_from_constant(
                     || "init can_set",
                     can_set_advice,
                     0,
-                    F::one(),
+                    F::ONE,
                 )?;
 
                 for (i, (m_bit, a_bit)) in max_bits.iter().zip(alpha_bits.iter()).enumerate() {
@@ -130,9 +130,7 @@ impl<F: Field> IsLessThanChip<F> {
                                         a_bit.value().and_then(|a_val| {
                                             Value::known(
                                                 *last_is_less
-                                                    - (*m_val
-                                                        * (F::one() - *a_val)
-                                                        * *last_can_set),
+                                                    - (*m_val * (F::ONE - *a_val) * *last_can_set),
                                             )
                                         })
                                     })
@@ -152,7 +150,7 @@ impl<F: Field> IsLessThanChip<F> {
                                     a_bit.value().and_then(|a_val| {
                                         Value::known(
                                             (*m_val * *a_val
-                                                + (F::one() - *m_val) * (F::one() - *a_val))
+                                                + (F::ONE - *m_val) * (F::ONE - *a_val))
                                                 * *last_can_set,
                                         )
                                     })
@@ -163,7 +161,7 @@ impl<F: Field> IsLessThanChip<F> {
                 }
 
                 // Assert the final value is zero
-                region.constrain_constant(is_less.cell(), F::zero())?;
+                region.constrain_constant(is_less.cell(), F::ZERO)?;
 
                 Ok(())
             },

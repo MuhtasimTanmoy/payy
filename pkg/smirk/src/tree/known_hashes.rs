@@ -4,13 +4,13 @@ use super::tree_repr::Node;
 
 impl<const DEPTH: usize, V, C> Tree<DEPTH, V, C> {
     pub(crate) fn known_hashes(&self) -> Vec<KnownHash> {
-        self.tree.known_hashes()
+        self.tree.known_hashes(DEPTH * self.len())
     }
 }
 
 impl Node {
-    pub(crate) fn known_hashes(&self) -> Vec<KnownHash> {
-        let mut hashes = Vec::new();
+    pub(crate) fn known_hashes(&self, cap: usize) -> Vec<KnownHash> {
+        let mut hashes = Vec::with_capacity(cap);
         self.known_hashes_inner(&mut hashes);
         hashes
     }

@@ -21,6 +21,7 @@ static PORT_POOL: Lazy<Mutex<PortPool>> =
 pub struct EthNode {
     process: Option<std::process::Child>,
     port: u16,
+    options: EthNodeOptions,
 }
 
 impl Drop for EthNode {
@@ -30,17 +31,30 @@ impl Drop for EthNode {
     }
 }
 
+#[derive(Debug, Default)]
+pub struct EthNodeOptions {
+    pub use_noop_verifier: bool,
+    pub validators: Option<Vec<String>>,
+}
+
+impl Default for EthNode {
+    fn default() -> Self {
+        Self::new(EthNodeOptions::default())
+    }
+}
+
 impl EthNode {
-    fn new() -> Self {
+    pub fn new(options: EthNodeOptions) -> Self {
         let port = PORT_POOL.lock().unwrap().get();
 
         Self {
             process: None,
             port,
+            options,
         }
     }
 
-    fn run(&mut self) {
+    pub fn run(&mut self) {
         // This must be the actual hardhat bin instead of running it through yarn,
         // because we send a SIGKILL which yarn can't forward to the hardhat node.
         let mut command = Command::new("node_modules/.bin/hardhat");
@@ -120,6 +134,14 @@ impl EthNode {
         );
         command.env("TESTING_URL", self.rpc_url());
 
+        if self.options.use_noop_verifier {
+            command.env("DEV_USE_NOOP_VERIFIER", "1");
+        }
+
+        if let Some(validators) = &self.options.validators {
+            command.env("VALIDATORS", validators.join(","));
+        }
+
         command.arg("run");
         command.arg("scripts/deploy.ts");
         command.arg("--network").arg("testing");
@@ -143,12 +165,10 @@ impl EthNode {
         }
     }
 
-    pub async fn run_and_deploy() -> Arc<Self> {
-        let mut eth_node = Self::new();
-
+    pub async fn run_and_deploy(mut self) -> Arc<Self> {
         let eth_node = tokio::task::spawn_blocking(move || {
-            eth_node.run();
-            eth_node
+            self.run();
+            self
         })
         .await
         .unwrap();
@@ -162,7 +182,7 @@ impl EthNode {
                     Ok(_) => break,
                     Err(err) => {
                         if i == 2 {
-                            panic!("Failed to deploy contracts: {err:?}");
+                            panic!("Failed to deploy contracts: {err:?}; Run with LOG_HARDHAT_DEPLOY_OUTPUT=1 to see the output");
                         } else {
                             std::thread::sleep(std::time::Duration::from_secs(5));
                         }

@@ -2,6 +2,7 @@ use std::{future::Future, time::Duration};
 
 use crate::Result;
 use ethereum_types::{Address, H256, U64};
+use testutil::eth::EthNode;
 use tokio::time::interval;
 use web3::{
     contract::{tokens::Tokenize, Contract, Options},
@@ -46,6 +47,10 @@ impl Client {
             address.parse()?,
             contract_abi,
         ))
+    }
+
+    pub fn from_eth_node(eth_node: &EthNode) -> Self {
+        Self::new(&eth_node.rpc_url(), None)
     }
 
     pub async fn eth_balance(&self, address: Address) -> Result<U256> {

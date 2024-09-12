@@ -4,6 +4,7 @@ use secp256k1::{Message, PublicKey, SecretKey, SECP256K1};
 use serde::{Deserialize, Deserializer, Serialize};
 use sha3::{Digest, Keccak256};
 use std::{fmt::Display, str::FromStr};
+use web3::types::Address as Web3Address;
 
 #[derive(
     Debug, Default, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, BorshSerialize, BorshDeserialize,
@@ -102,8 +103,8 @@ impl FromStr for Address {
     }
 }
 
-impl From<contracts::Address> for Address {
-    fn from(addr: contracts::Address) -> Self {
+impl From<Web3Address> for Address {
+    fn from(addr: Web3Address) -> Self {
         Self(addr.0)
     }
 }

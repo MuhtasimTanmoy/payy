@@ -25,10 +25,10 @@
 // use ff::PrimeFieldBits;
 use halo2_base::halo2_proofs::{
     circuit::{AssignedCell, Region, Value},
-    halo2curves::FieldExt,
     plonk::{Advice, Column, ConstraintSystem, Constraints, Error, Expression, Selector},
     poly::Rotation,
 };
+use snark_verifier::util::arithmetic::FieldExt;
 use std::marker::PhantomData;
 
 use crate::fr::PrimeFieldBits;
@@ -208,7 +208,7 @@ impl<F: FieldExt + PrimeFieldBits, const WINDOW_NUM_BITS: usize>
         //     || format!("b_{:?}", 0),
         //     self.b,
         //     offset,
-        //     || Value::known(F::zero()),
+        //     || Value::known(F::ZERO),
         // )?;
 
         // Assign running sum `z_{i+1}` = (z_i - k_i) / (2^K) for i = 0..=n-1.
@@ -241,7 +241,7 @@ impl<F: FieldExt + PrimeFieldBits, const WINDOW_NUM_BITS: usize>
         assert_eq!(zs.len(), num_windows);
 
         // Constrain the final running sum output to be zero.
-        region.constrain_constant(z.cell(), F::zero())?;
+        region.constrain_constant(z.cell(), F::ZERO)?;
 
         Ok(BinaryDecomposition(zs))
     }
@@ -256,7 +256,7 @@ mod tests {
     use halo2_base::halo2_proofs::{
         circuit::{Layouter, SimpleFloorPlanner},
         dev::MockProver,
-        halo2curves::{bn256::Fr, FieldExt},
+        halo2curves::bn256::Fr,
         plonk::{Circuit, ConstraintSystem, Error},
     };
 

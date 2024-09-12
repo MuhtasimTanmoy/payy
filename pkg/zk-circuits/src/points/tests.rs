@@ -2,7 +2,7 @@ use crate::data::{Note, Points};
 use halo2_base::halo2_proofs::{dev::MockProver, halo2curves::bn256::Fr};
 use rand::thread_rng;
 use smirk::{hash_merge, Element};
-use snark_verifier::util::arithmetic::FieldExt;
+use snark_verifier::util::arithmetic::{FieldExt, PrimeField};
 
 #[test]
 fn test_one_note() {

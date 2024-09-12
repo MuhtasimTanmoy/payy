@@ -1,4 +1,4 @@
-use poseidon_circuit::poseidon::primitives::{ConstantLength, Hash, P128Pow5T3};
+use poseidon_base::primitives::{ConstantLength, Hash, P128Pow5T3, P128Pow5T3Compact};
 
 use crate::{Base, Element};
 
@@ -62,7 +62,7 @@ pub fn reset_hash_element_count() {
 #[inline]
 #[must_use]
 pub fn hash_merge<const N: usize>(elements: [Element; N]) -> Element {
-    type H<const N: usize> = Hash<Base, P128Pow5T3<Base>, ConstantLength<N>, 3, 2>;
+    type H<const N: usize> = Hash<Base, P128Pow5T3Compact<Base>, ConstantLength<N>, 3, 2>;
 
     #[cfg(feature = "test-api")]
     {

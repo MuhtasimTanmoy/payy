@@ -16,6 +16,7 @@ const USDC_ADDRESSES: Record<string, string> = {
 
 async function main(): Promise<void> {
   const chainId = hre.network.config.chainId ?? 'DEV'
+  const useNoopVerifier = process.env.DEV_USE_NOOP_VERIFIER === '1'
   const [owner] = await hre.viem.getWalletClients()
   const publicClient = await hre.viem.getPublicClient()
 
@@ -31,6 +32,14 @@ async function main(): Promise<void> {
   } else {
     usdcAddress = USDC_ADDRESSES[chainId]
   }
+
+  if (!isDev && useNoopVerifier) {
+    throw new Error('Cannot use no-op verifier if not deploying for dev')
+  } else if (useNoopVerifier) {
+    console.warn('Warning: using no-op verifier')
+  }
+
+  const maybeNoopVerifier = (verifier: string) => useNoopVerifier ? 'NoopVerifier.bin' : verifier
 
   let proverAddress = process.env.PROVER_ADDRESS as `0x${string}`
   let validators = process.env.VALIDATORS?.split(',') ?? [] as Array<`0x${string}`>
@@ -57,7 +66,7 @@ async function main(): Promise<void> {
   console.error({ proverAddress, validators, ownerAddress, deployerIsProxyAdmin })
 
   // Aggregate verifier
-  const aggregateBinAddr = await deployBin('AggregateVerifier.bin')
+  const aggregateBinAddr = await deployBin(maybeNoopVerifier('AggregateVerifier.bin'))
   console.log(`AGGREGATE_BIN_ADDR=${aggregateBinAddr}`)
 
   const aggregateVerifier = await hre.viem.deployContract('AggregateVerifierV1', [aggregateBinAddr], {})
@@ -222,7 +231,7 @@ async function deployBin(binFile: string): Promise<`0x${string}`> {
   const publicClient = await hre.viem.getPublicClient()
   const verifierAddr = (await publicClient.waitForTransactionReceipt({ hash: verifierTx })).contractAddress
 
-  if (verifierAddr === null) throw new Error('Verifier address not found')
+  if (verifierAddr === null || verifierAddr === undefined) throw new Error('Verifier address not found')
 
   return verifierAddr
 }

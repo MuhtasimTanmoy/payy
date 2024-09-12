@@ -3,13 +3,10 @@ use halo2_base::halo2_proofs::{
     halo2curves::bn256::Fr,
     plonk::Error,
 };
-use poseidon_circuit::{
-    poseidon::{
-        primitives::{ConstantLength, Hash as PoseidonHash, P128Pow5T3},
-        Hash,
-    },
-    Hashable,
+use poseidon_base::primitives::{
+    CachedSpec, ConstantLength, Hash as PoseidonHash, P128Pow5T3, P128Pow5T3Compact,
 };
+use poseidon_circuit::{poseidon::Hash, Hashable};
 
 pub use poseidon_circuit::poseidon::{Pow5Chip as PoseidonChip, Pow5Config as PoseidonConfig};
 
@@ -35,8 +32,11 @@ pub fn poseidon_hash_gadget<const L: usize>(
 }
 
 // TODO: make Element Hashable
-pub fn poseidon_hash<F: Hashable, const L: usize>(message: [F; L]) -> F {
-    PoseidonHash::<F, P128Pow5T3<F>, ConstantLength<L>, 3, 2>::init().hash(message)
+pub fn poseidon_hash<F: Hashable, const L: usize>(message: [F; L]) -> F
+where
+    P128Pow5T3Compact<F>: CachedSpec<F, 3, 2>,
+{
+    PoseidonHash::<F, P128Pow5T3Compact<F>, ConstantLength<L>, 3, 2>::init().hash(message)
 }
 
 #[cfg(test)]
@@ -50,7 +50,7 @@ mod tests {
         plonk::{Advice, Circuit, Column, ConstraintSystem, Instance},
     };
     use smirk::hash_merge;
-    use snark_verifier::util::arithmetic::FieldExt;
+    use snark_verifier::util::arithmetic::{FieldExt, PrimeField};
 
     #[test]
     fn poseidon_hash_snapshot() {

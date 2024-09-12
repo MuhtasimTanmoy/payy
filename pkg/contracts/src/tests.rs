@@ -6,6 +6,7 @@ use std::str::FromStr;
 use std::sync::Arc;
 use std::time::Duration;
 use testutil::eth::EthNode;
+use testutil::ACCOUNT_1_SK;
 use web3::signing::{keccak256, SecretKey};
 use web3::types::Address;
 use zk_circuits::constants::MERKLE_TREE_DEPTH;
@@ -14,51 +15,33 @@ use zk_circuits::test::rollup::Rollup;
 
 use super::*;
 
-const ACCOUNT_1_SK: &str = "ac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80";
-
-pub struct Env {
+struct Env {
     _eth_node: Arc<EthNode>,
-    pub evm_secret_key: SecretKey,
-    pub evm_address: Address,
-    pub rollup_contract: RollupContract,
-    pub rollup_contract_addr: Address,
-    pub usdc_contract: USDCContract,
-    // client: Client,
+    evm_secret_key: SecretKey,
+    evm_address: Address,
+    rollup_contract: RollupContract,
+    usdc_contract: USDCContract,
 }
 
-pub async fn make_env() -> Env {
-    let eth_node = EthNode::run_and_deploy().await;
+async fn make_env() -> Env {
+    let eth_node = EthNode::default().run_and_deploy().await;
 
-    let rpc = std::env::var("ETHEREUM_RPC").unwrap_or(eth_node.rpc_url());
-
-    let rollup_addr = std::env::var("ROLLUP_CONTRACT_ADDR")
-        .unwrap_or("2279b7a0a67db372996a5fab50d91eaa73d2ebe6".to_string());
-
-    let usdc_addr = &std::env::var("USDC_CONTRACT_ADDR")
-        .unwrap_or("5fbdb2315678afecb367f032d93f642f64180aa3".to_string());
-
-    let evm_secret_key = SecretKey::from_str(&std::env::var("PROVER_SECRET_KEY").unwrap_or(
-        // Seems to be the default when deploying with hardhat to a local node
-        ACCOUNT_1_SK.to_owned(),
-    ))
-    .unwrap();
-
+    let evm_secret_key = SecretKey::from_str(ACCOUNT_1_SK).unwrap();
     let evm_address = to_address(&evm_secret_key);
 
-    let client = Client::new(&rpc, None);
+    let rollup_contract = RollupContract::from_eth_node(&eth_node, evm_secret_key)
+        .await
+        .unwrap();
+    let usdc_contract = USDCContract::from_eth_node(&eth_node, evm_secret_key)
+        .await
+        .unwrap();
 
     Env {
         _eth_node: eth_node,
         evm_secret_key,
         evm_address,
-        rollup_contract: RollupContract::load(client.clone(), &rollup_addr, evm_secret_key)
-            .await
-            .unwrap(),
-        rollup_contract_addr: Address::from_str(&rollup_addr).unwrap(),
-        usdc_contract: USDCContract::load(client, usdc_addr, evm_secret_key)
-            .await
-            .unwrap(),
-        // client,
+        rollup_contract,
+        usdc_contract,
     }
 }
 
@@ -204,7 +187,7 @@ async fn mint_from() {
     let proof = mint.evm_proof(params).unwrap();
 
     env.usdc_contract
-        .approve_max(env.rollup_contract_addr)
+        .approve_max(env.rollup_contract.address())
         .await
         .unwrap();
 
@@ -235,7 +218,7 @@ async fn mint_with_authorization() {
     // Sig for the USDC function
     let sig_bytes = env.usdc_contract.signature_for_receive(
         env.evm_address,
-        env.rollup_contract_addr,
+        env.rollup_contract.address(),
         amount.into(),
         valid_after,
         valid_before,

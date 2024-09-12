@@ -1,9 +1,9 @@
 use halo2_base::halo2_proofs::{
-    arithmetic::FieldExt,
     circuit::{Region, Value},
     plonk::{Advice, Column, ConstraintSystem, Error, Expression, VirtualCells},
     poly::Rotation,
 };
+use snark_verifier::util::arithmetic::FieldExt;
 
 #[derive(Clone, Debug)]
 pub struct IsZeroConfig<F> {
@@ -36,7 +36,7 @@ impl<F: FieldExt> IsZeroChip<F> {
         value: impl FnOnce(&mut VirtualCells<'_, F>) -> Expression<F>,
         value_inv: Column<Advice>,
     ) -> IsZeroConfig<F> {
-        let mut is_zero_expr = Expression::Constant(F::zero());
+        let mut is_zero_expr = Expression::Constant(F::ZERO);
 
         // GATE WILL EVALUATE TO 1 if ZERO, 0 otherwise!
         meta.create_gate("is_zero", |meta| {
@@ -53,7 +53,7 @@ impl<F: FieldExt> IsZeroChip<F> {
             let value_inv = meta.query_advice(value_inv, Rotation::cur());
 
             // This will be used inside another constrait gate!
-            is_zero_expr = Expression::Constant(F::one()) - value.clone() * value_inv;
+            is_zero_expr = Expression::Constant(F::ONE) - value.clone() * value_inv;
 
             // This is an additional constraint check to prevent the value_inv being populated incorrectly! This is populated
             // by the prover, in assign below, so we must ensure they have used a valid value!
@@ -80,7 +80,7 @@ impl<F: FieldExt> IsZeroChip<F> {
         offset: usize,
         value: Value<F>,
     ) -> Result<(), Error> {
-        let value_inv = value.map(|value| value.invert().unwrap_or(F::zero()));
+        let value_inv = value.map(|value| value.invert().unwrap_or(F::ZERO));
         region.assign_advice(|| "value inv", self.config.value_inv, offset, || value_inv)?;
         Ok(())
     }
@@ -92,13 +92,13 @@ mod tests {
 
     use super::*;
     use halo2_base::halo2_proofs::{
-        arithmetic::FieldExt,
         circuit::SimpleFloorPlanner,
         dev::{FailureLocation, MockProver, VerifyFailure},
         halo2curves::pasta::Fp,
         plonk::{Advice, Any, Circuit, Column, ConstraintSystem, Constraints, Instance, Selector},
         poly::Rotation,
     };
+    use snark_verifier::util::arithmetic::PrimeField;
 
     /////////
     ///
@@ -255,7 +255,7 @@ mod tests {
     fn test_non_zero() {
         let k = 4;
 
-        let val = Fp::from_u128(10u128);
+        let val = Fp::from(10);
 
         let circuit = TestCircuit {
             is_zero: Fp::zero(),
@@ -272,7 +272,7 @@ mod tests {
     fn test_non_zero_invalid() {
         let k = 4;
 
-        let val = Fp::from_u128(10u128);
+        let val = Fp::from(10);
 
         let circuit = TestCircuit { is_zero: Fp::one() };
 
@@ -301,10 +301,10 @@ mod tests {
     fn test_non_zero_invalid_non_bool() {
         let k = 4;
 
-        let val = Fp::from_u128(10u128);
+        let val = Fp::from(10);
 
         let circuit = TestCircuit {
-            is_zero: Fp::from_u128(10u128),
+            is_zero: Fp::from(10),
         };
 
         // Vector for the public input column (if we had more, we'd need to add additional)

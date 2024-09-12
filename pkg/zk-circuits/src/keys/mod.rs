@@ -44,7 +44,6 @@ vk_function!(points, Points);
 vk_function!(utxo, Utxo::<161>);
 vk_function!(utxo_agg_3_161_12, AggregateUtxo::<3, 161, 12>);
 
-
 pub enum CircuitKind {
     Signature,
     Points,
@@ -71,11 +70,10 @@ impl CircuitKind {
 
     pub(crate) fn vk(&self) -> &'static VK {
         match self {
-            Self::Points => points(),
-            Self::AggUtxo => utxo_agg_3_161_12(),
-            Self::AggAgg => agg_agg_2(),
-            Self::Utxo => utxo(),
-
+            // Self::Points => points(),
+            // Self::AggUtxo => utxo_agg_3_161_12(),
+            // Self::AggAgg => agg_agg_2(),
+            // Self::Utxo => utxo(),
             _ => {
                 let (_, vk) = self.keys();
                 vk

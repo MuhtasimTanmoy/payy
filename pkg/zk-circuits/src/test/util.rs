@@ -1,8 +1,5 @@
 use halo2_base::halo2_proofs::{
-    halo2curves::{
-        bn256::{Bn256, Fr, G1Affine},
-        FieldExt,
-    },
+    halo2curves::bn256::{Bn256, Fr, G1Affine},
     plonk::{
         keygen_pk, keygen_vk, Advice, Circuit, Column, ConstraintSystem, Error, Instance,
         ProvingKey, VerifyingKey,
@@ -11,6 +8,7 @@ use halo2_base::halo2_proofs::{
 };
 use itertools::Itertools;
 use smirk::Element;
+use snark_verifier::util::arithmetic::FieldExt;
 
 use crate::{
     chips::{

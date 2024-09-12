@@ -4,7 +4,7 @@ use crate::params::load_params;
 use base64::Engine;
 use blake2b_simd::Params as Blake2bParams;
 use halo2_base::halo2_proofs::{
-    arithmetic::{Field, FieldExt},
+    arithmetic::Field,
     circuit::{AssignedCell, Layouter, Value},
     halo2curves::bn256::{Fr, G1Affine},
     plonk::{
@@ -13,6 +13,7 @@ use halo2_base::halo2_proofs::{
 };
 use num_bigint::{BigUint, ToBigUint};
 use serde::{Deserialize, Deserializer, Serializer};
+use snark_verifier::util::arithmetic::FieldExt;
 use zk_primitives::Element;
 
 pub(crate) fn assign_private_input<F: FieldExt, V: Copy, N: Fn() -> NR, NR: Into<String>>(
@@ -43,19 +44,19 @@ where
     })
 }
 
-pub fn blake_hash<const L: usize>(message: [&[u8]; L]) -> Element {
-    let mut h = Blake2bParams::new()
-        .hash_length(64)
-        .personal(BLAKE_PERSONALISATION)
-        .to_state();
+// pub fn blake_hash<const L: usize>(message: [&[u8]; L]) -> Element {
+//     let mut h = Blake2bParams::new()
+//         .hash_length(64)
+//         .personal(BLAKE_PERSONALISATION)
+//         .to_state();
 
-    for i in message {
-        h.update(i);
-    }
+//     for i in message {
+//         h.update(i);
+//     }
 
-    let psi_bytes = *h.finalize().as_array();
-    Fr::from_bytes_wide(&psi_bytes).into()
-}
+//     let psi_bytes = *h.finalize().as_array();
+//     Fr::from_bytes_wide(&psi_bytes).into()
+// }
 
 // fn random_bytes_32() {
 //     let mut rng = rand::thread_rng();
@@ -103,6 +104,16 @@ where
 {
     let base64_string = base64::engine::general_purpose::STANDARD.encode(value);
     serializer.serialize_str(&base64_string)
+}
+
+pub fn serialize_base64_opt<S>(value: &Option<Vec<u8>>, serializer: S) -> Result<S::Ok, S::Error>
+where
+    S: Serializer,
+{
+    match value {
+        Some(v) => serialize_base64(v, serializer),
+        None => serializer.serialize_none(),
+    }
 }
 
 // Custom deserializer for base64 string to Vec<u8>

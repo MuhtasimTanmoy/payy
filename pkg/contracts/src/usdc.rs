@@ -4,6 +4,7 @@ use ethereum_types::U64;
 use rustc_hex::FromHex;
 use secp256k1::{Message, SECP256K1};
 use sha3::{Digest, Keccak256};
+use testutil::eth::EthNode;
 use web3::{
     contract::{tokens::Tokenize, Contract},
     signing::{Key, SecretKey, SecretKeyRef},
@@ -73,6 +74,13 @@ impl USDCContract {
             domain_separator,
             usdc_contract_addr.parse()?,
         ))
+    }
+
+    pub async fn from_eth_node(eth_node: &EthNode, signer: SecretKey) -> Result<Self> {
+        let usdc_addr = "5fbdb2315678afecb367f032d93f642f64180aa3";
+
+        let client = Client::from_eth_node(eth_node);
+        Self::load(client, usdc_addr, signer).await
     }
 
     pub async fn call(&self, func: &str, params: impl Tokenize + Clone) -> Result<H256> {

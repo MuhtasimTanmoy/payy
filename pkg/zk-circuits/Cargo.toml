@@ -1,6 +1,6 @@
 [package]
 name = "zk-circuits"
-version = "1.1.12"
+version = "1.3.0"
 edition = "2021"
 
 [dependencies]
@@ -19,6 +19,7 @@ halo2-ecc = { workspace = true }
 halo2_gadgets = { workspace = true }
 itertools = { workspace = true }
 num-bigint = { workspace = true }
+poseidon-base = { workspace = true }
 poseidon-circuit = { workspace = true }
 rand = { workspace = true, features = ["small_rng"] }
 secp256k1 = { workspace = true }

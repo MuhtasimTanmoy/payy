@@ -1,6 +1,6 @@
 {
   "name": "hardhat-tutorial",
-  "version": "1.1.12",
+  "version": "1.3.0",
   "main": "index.js",
   "license": "MIT",
   "scripts": {

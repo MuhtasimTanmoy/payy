@@ -1,10 +1,10 @@
 use super::is_zero::{IsZeroChip, IsZeroConfig};
 use halo2_base::halo2_proofs::{
-    arithmetic::FieldExt,
     circuit::{AssignedCell, Layouter, Value},
     plonk::{Advice, Column, ConstraintSystem, Constraints, Error, Expression, Selector},
     poly::Rotation,
 };
+use snark_verifier::util::arithmetic::FieldExt;
 
 #[derive(Clone, Debug)]
 pub struct IsConstantConfig<F: FieldExt> {
@@ -91,10 +91,10 @@ impl<F: FieldExt> IsConstantChip<F> {
                     0,
                     || {
                         value.and_then(|v| {
-                            if v == F::zero() {
-                                Value::known(F::one())
+                            if v == F::ZERO {
+                                Value::known(F::ONE)
                             } else {
-                                Value::known(F::zero())
+                                Value::known(F::ZERO)
                             }
                         })
                     },
@@ -153,7 +153,7 @@ mod tests {
                     zero_advice,
                     inverse_advice,
                     output_advice,
-                    Fr::from_u128(10u128),
+                    Fr::from(10),
                 ),
                 comparison: advice_column_equality(meta),
                 instance: instance_column_equality(meta),
@@ -189,10 +189,10 @@ mod tests {
     fn test_equal_constant() {
         let k = 3;
 
-        let public_input = vec![Fr::from_u128(1u128)];
+        let public_input = vec![Fr::from(1)];
         let instance_columns = vec![public_input];
         let circuit = IsConstantCircuit {
-            compare: Fr::from_u128(10u128),
+            compare: Fr::from(10),
         };
 
         let prover = MockProver::<Fr>::run(k, &circuit, instance_columns).unwrap();
@@ -203,10 +203,10 @@ mod tests {
     fn test_not_equal_constant() {
         let k = 3;
 
-        let public_input = vec![Fr::from_u128(0u128)];
+        let public_input = vec![Fr::from(0)];
         let instance_columns = vec![public_input];
         let circuit = IsConstantCircuit {
-            compare: Fr::from_u128(11u128),
+            compare: Fr::from(11),
         };
 
         let prover = MockProver::<Fr>::run(k, &circuit, instance_columns).unwrap();
@@ -217,10 +217,10 @@ mod tests {
     fn test_zero() {
         let k = 3;
 
-        let public_input = vec![Fr::from_u128(0u128)];
+        let public_input = vec![Fr::from(0)];
         let instance_columns = vec![public_input];
         let circuit = IsConstantCircuit {
-            compare: Fr::from_u128(0u128),
+            compare: Fr::from(0),
         };
 
         let prover = MockProver::<Fr>::run(k, &circuit, instance_columns).unwrap();

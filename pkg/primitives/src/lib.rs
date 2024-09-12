@@ -7,3 +7,8 @@ pub mod sig;
 pub mod tick_worker;
 pub mod u256;
 pub mod util;
+
+pub use web3::{
+    signing::SecretKey,
+    types::{Address, H256, U256},
+};

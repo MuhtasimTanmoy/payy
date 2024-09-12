@@ -1,11 +1,11 @@
 //! Gadget and chip for a conditional swap utility.
 use halo2_base::halo2_proofs::{
-    arithmetic::FieldExt,
     circuit::{AssignedCell, Layouter, Region, Value},
     plonk::{Advice, Column, ConstraintSystem, Constraints, Error, Selector},
     poly::Rotation,
 };
 use halo2_gadgets::utilities::{bool_check, ternary};
+use snark_verifier::util::arithmetic::FieldExt;
 use std::marker::PhantomData;
 
 /// A chip implementing a conditional swap.
@@ -84,7 +84,7 @@ impl<F: FieldExt> CondSwapChip<F> {
                 .value()
                 .zip(b.value())
                 .zip(swap.value())
-                .map(|((a, b), swap)| if *swap == F::one() { b } else { a })
+                .map(|((a, b), swap)| if *swap == F::ONE { b } else { a })
                 .cloned();
             region.assign_advice(|| "a_swapped", config.a_swapped, 0, || a_swapped)?
         };
@@ -95,7 +95,7 @@ impl<F: FieldExt> CondSwapChip<F> {
                 .value()
                 .zip(b.value())
                 .zip(swap.value())
-                .map(|((a, b), swap)| if *swap == F::one() { a } else { b })
+                .map(|((a, b), swap)| if *swap == F::ONE { a } else { b })
                 .cloned();
             region.assign_advice(|| "b_swapped", config.b_swapped, 0, || b_swapped)?
         };
@@ -194,10 +194,11 @@ mod tests {
         arithmetic::Field,
         circuit::{Layouter, SimpleFloorPlanner, Value},
         dev::MockProver,
-        halo2curves::{bn256::Fr, FieldExt},
+        halo2curves::bn256::Fr,
         plonk::{Circuit, ConstraintSystem, Error},
     };
     use rand::rngs::OsRng;
+    use snark_verifier::util::arithmetic::FieldExt;
 
     #[test]
     fn cond_swap() {
@@ -264,7 +265,7 @@ mod tests {
                     .zip(a.value().zip(self.b.as_ref()))
                     .zip(swapped_pair.0.value().zip(swapped_pair.1.value()))
                     .assert_if_known(|((swap, (a, b)), (a_swapped, b_swapped))| {
-                        if *swap == F::one() {
+                        if *swap == F::ONE {
                             // Check that `a` and `b` have been swapped
                             (a_swapped == b) && (b_swapped == a)
                         } else {
